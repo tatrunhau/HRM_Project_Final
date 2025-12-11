@@ -86,10 +86,6 @@ app.use('/api/holidays', holidayRoutes);
 app.use('/api/resignations', resignationRoutes);
 app.use('/api/reports', reportRoutes);
 
-app.use(protectedRoute);
-
-app.use('/api/users', userRoutes);
-
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
   console.log(`Allowed CORS Origins:`, allowedOrigins); // Log để kiểm tra
