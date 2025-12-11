@@ -255,3 +255,13 @@ export const getEmployeesList = async () => {
         return [];
     }
 };
+// Thêm hàm này vào cuối file hoặc gần các hàm Advance Request khác
+export const updateAdvanceRequest = async (id: number, data: { status: string, admin_comment?: string }) => {
+    try {
+        // Gọi API PUT để cập nhật trạng thái đơn ứng lương
+        const res = await api.put(`/payroll/advance/${id}`, data);
+        return res.data;
+    } catch (error: any) {
+        throw error.response?.data?.message || "Lỗi cập nhật trạng thái đơn ứng lương";
+    }
+};
