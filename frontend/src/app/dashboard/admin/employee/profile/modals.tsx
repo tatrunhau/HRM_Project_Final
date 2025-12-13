@@ -70,7 +70,7 @@ export default function EmployeeModals({
   }, [showModal]);
 
   // --- 2. HÀM VALIDATE DỮ LIỆU ---
-  const validateForm = () => {
+const validateForm = () => {
     const newErrors: { [key: string]: string } = {};
     let isValid = true;
 
@@ -78,9 +78,11 @@ export default function EmployeeModals({
     if (!formData.name?.trim()) { newErrors.name = 'Vui lòng nhập họ tên.'; isValid = false; }
     if (!formData.dateofbirth) { newErrors.dateofbirth = 'Chọn ngày sinh.'; isValid = false; }
     if (formData.gender === undefined || formData.gender === null) { newErrors.gender = 'Chọn giới tính.'; isValid = false; }
-    if (!formData.cccd?.trim()) { newErrors.cccd = 'Nhập CCCD/CMND.'; isValid = false; }
-    if (!formData.phonenumber?.trim()) { newErrors.phonenumber = 'Nhập SĐT.'; isValid = false; }
-    if (!formData.email?.trim()) { newErrors.email = 'Nhập Email.'; isValid = false; }
+    
+    // SỬA LỖI TẠI ĐÂY: Ép kiểu String(value || '') trước khi .trim()
+    if (!String(formData.cccd || '').trim()) { newErrors.cccd = 'Nhập CCCD/CMND.'; isValid = false; }
+    if (!String(formData.phonenumber || '').trim()) { newErrors.phonenumber = 'Nhập SĐT.'; isValid = false; }
+    if (!String(formData.email || '').trim()) { newErrors.email = 'Nhập Email.'; isValid = false; }
 
     // --- Cột 2: Công việc & Lương ---
     if (!formData.departmentid) { newErrors.departmentid = 'Chọn phòng ban.'; isValid = false; }
@@ -94,6 +96,7 @@ export default function EmployeeModals({
     if (!formData.educationlevel) { newErrors.educationlevel = 'Chọn trình độ.'; isValid = false; }
     if (formData.maritalstatus === undefined || formData.maritalstatus === null) { newErrors.maritalstatus = 'Chọn TT hôn nhân.'; isValid = false; }
     if (formData.religion === undefined || formData.religion === null) { newErrors.religion = 'Chọn tôn giáo.'; isValid = false; }
+    
     // Dependents có thể để 0 (mặc định), nhưng không được để trống hoàn toàn
     if (formData.dependents === undefined || formData.dependents === '' || Number(formData.dependents) < 0) { 
         newErrors.dependents = 'Nhập số người.'; isValid = false; 

@@ -230,7 +230,12 @@ export const deleteEmployee = async (req, res) => {
   } catch (error) {
     await t.rollback();
     console.error('Lỗi xóa:', error);
-    return res.status(500).json({ message: 'Lỗi máy chủ' });
+    
+    // 👇 SỬA DÒNG NÀY: Gửi kèm chi tiết lỗi (error.original.detail) để Frontend bắt được
+    return res.status(500).json({ 
+        message: 'Lỗi máy chủ', 
+        error: error.original ? error.original.detail : error.message 
+    });
   }
 };
 

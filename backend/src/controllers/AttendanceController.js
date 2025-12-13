@@ -568,11 +568,28 @@ export const checkInByQr = async (req, res) => {
             }
 
             // [SỬA] Dùng localTime để lưu vào DB
-            await timekeeping.update({
-                checkouttime: localTime,
-                early_leave_minutes: earlyMinutes,
-                status: (timekeeping.late_minutes > 0 || earlyMinutes > 0) ? 'NOT_FULL' : 'FULL'
-            });
+// --- LOGIC MỚI: TỰ ĐỘNG XÁC ĐỊNH TRẠNG THÁI ---
+let newStatus = 'FULL'; // Mặc định là đủ công
+
+// Nếu vừa đi muộn (đã có từ lúc check-in) VÀ về sớm
+if (timekeeping.late_minutes > 0 && earlyMinutes > 0) {
+    newStatus = 'LATE & EARLY_LEAVE'; 
+} 
+// Nếu chỉ đi muộn
+else if (timekeeping.late_minutes > 0) {
+    newStatus = 'LATE';
+} 
+// Nếu chỉ về sớm
+else if (earlyMinutes > 0) {
+    newStatus = 'EARLY_LEAVE';
+}
+
+// [SỬA] Cập nhật vào DB
+await timekeeping.update({
+    checkouttime: localTime,
+    early_leave_minutes: earlyMinutes,
+    status: newStatus
+});``
 
             if (overtimeReq) {
                 const otEnd = new Date(overtimeReq.endtime); 

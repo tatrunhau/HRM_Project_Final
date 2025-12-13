@@ -71,6 +71,28 @@ export default function AttendanceModals({
     const [otForm, setOtForm] = useState({ employeeId: '', date: '', start: '', end: '', reason: '' });
 
     useEffect(() => {
+        // Chỉ gọi API khi mở modal "Nghỉ phép" hoặc "Tăng ca" và danh sách đang trống
+        if ((showLeaveModal || showOvertimeModal) && employees.length === 0) {
+            const fetchEmployees = async () => {
+                try {
+                    // Gọi API (đã import ở trên)
+                    const data = await getEmployeesList(); 
+                    // Kiểm tra dữ liệu trả về có phải mảng không
+                    if (Array.isArray(data)) {
+                        setEmployees(data);
+                    } else if (data && data.data && Array.isArray(data.data)) {
+                         // Dự phòng trường hợp API trả về { data: [...] }
+                        setEmployees(data.data);
+                    }
+                } catch (error) {
+                    console.error("Lỗi tải danh sách nhân viên:", error);
+                }
+            };
+            fetchEmployees();
+        }
+    }, [showLeaveModal, showOvertimeModal]);
+
+    useEffect(() => {
         if (showEditStatusModal && selectedLog) {
             // 1. Load Status
             const currentStatus = selectedLog.status ? selectedLog.status.toUpperCase() : 'ABSENT';
@@ -437,6 +459,7 @@ export default function AttendanceModals({
                                     <SelectItem value="ON_TIME">Đúng giờ (On Time)</SelectItem>
                                     <SelectItem value="LATE">Đi muộn (Late)</SelectItem>
                                     <SelectItem value="EARLY_LEAVE">Về sớm (Early Leave)</SelectItem>
+                                    <SelectItem value="LATE & EARLY_LEAVE">Muộn & Sớm</SelectItem>
                                     <SelectItem value="FULL">Đủ công (Full)</SelectItem>
                                     <SelectItem value="ABSENT">Vắng (Absent)</SelectItem>
                                     <SelectItem value="ABSENT_PERMISSION">Vắng có phép</SelectItem>
