@@ -198,15 +198,40 @@ export default function RecruitmentPlanPage() {
   useEffect(() => { fetchData(); }, []);
 
   // ... SORT & FILTER LOGIC ...
-  const filteredPlans = useMemo(() => {
+const filteredPlans = useMemo(() => {
     return plans.filter(plan => {
-      const matchesSearch = plan.planNumber.toLowerCase().includes(searchTerm.toLowerCase()) || plan.abstract?.toLowerCase().includes(searchTerm.toLowerCase()) || plan.location?.toLowerCase().includes(searchTerm.toLowerCase());
+      const term = searchTerm.toLowerCase();
+
+      // 1. Lấy tên hiển thị thay vì ID để so sánh
+      const signerName = getEmployeeName(plan.signer).toLowerCase();
+      const departmentName = getDepartmentName(plan.department).toLowerCase();
+
+      // 2. Chuyển đổi ngày sang chuỗi hiển thị (DD/MM/YYYY) để tìm kiếm
+      const issueDateStr = formatDate(plan.issueDate);
+      const effectiveDateStr = formatDate(plan.effectiveDate);
+      const endDateStr = formatDate(plan.endDate);
+
+      // 3. Logic so sánh mở rộng
+      const matchesSearch = 
+        plan.planNumber.toLowerCase().includes(term) || 
+        plan.abstract?.toLowerCase().includes(term) || 
+        plan.location?.toLowerCase().includes(term) ||
+        // THÊM CÁC DÒNG NÀY ĐỂ TÌM THEO CỘT KHÁC:
+        signerName.includes(term) ||                // Tìm theo tên người ký
+        departmentName.includes(term) ||            // Tìm theo tên bộ phận
+        issueDateStr.includes(term) ||              // Tìm theo ngày ban hành (VD: gõ "20/11")
+        effectiveDateStr.includes(term) ||          // Tìm theo ngày hiệu lực
+        endDateStr.includes(term);                  // Tìm theo ngày kết thúc
+
       let matchesFilter = true;
       if (filterType === 'signer' && filterValue) matchesFilter = plan.signer === filterValue;
       else if (filterType === 'department' && filterValue) matchesFilter = plan.department === filterValue;
+      
       return matchesSearch && matchesFilter;
     });
-  }, [plans, searchTerm, filterType, filterValue]);
+    // LƯU Ý QUAN TRỌNG: Phải thêm departments và employees vào dependency array 
+    // để khi dữ liệu nhân viên/phòng ban tải xong thì bộ lọc mới hiểu được tên.
+  }, [plans, searchTerm, filterType, filterValue, departments, employees]);
 
   const sortedPlans = useMemo(() => {
     if (!sortConfig) return filteredPlans;
