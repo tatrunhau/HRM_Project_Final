@@ -1,6 +1,6 @@
 'use client';
 
-import { Suspense, useState, useEffect } from 'react'; // 1. Thêm Suspense
+import { Suspense, useState, useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -10,7 +10,6 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import Link from 'next/link';
 import { resetPassword } from '@/services/Login/auth';
 
-// 2. Tách logic chính ra thành một component con (ResetPasswordContent)
 function ResetPasswordContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -28,11 +27,12 @@ function ResetPasswordContent() {
     }
   }, [userid, router]);
 
-  const handleReset = async (e: React.FormEvent) => {
+  const handleReset = async (e) => {
     e.preventDefault();
     setLoading(true);
     setError('');
 
+    // 1. Validate phía Client
     if (newPass !== confirmPass) {
       setError('Mật khẩu nhập lại không khớp!');
       setLoading(false);
@@ -48,20 +48,32 @@ function ResetPasswordContent() {
     try {
       if (!userid) throw new Error("Không tìm thấy User ID");
       
-      // Gọi API resetPassword (lưu ý: userid ở đây là string, cần đảm bảo API nhận đúng kiểu)
-      await resetPassword(Number(userid), newPass);
+      // ✅ SỬA 1: Truyền đủ 3 tham số (userid, newPass, confirmPass)
+      // File auth.ts yêu cầu 3 tham số, nếu thiếu sẽ bị lỗi API
+      await resetPassword(userid, newPass, confirmPass);
       
       setSuccess(true);
+      
+      // Chuyển hướng sau 3 giây
       setTimeout(() => {
         router.push('/Login');
       }, 3000);
-    } catch (err: any) {
-      setError(err || 'Đã có lỗi xảy ra. Vui lòng thử lại.');
+
+    } catch (err) {
+      console.error("Lỗi chi tiết:", err);
+
+      // ✅ SỬA 2: Xử lý lỗi Object -> String (Fix lỗi React #31)
+      // File auth.ts throw ra một object dạng { message: "..." }
+      // Chúng ta cần lấy value của key 'message' để hiển thị
+      const errorMessage = err?.message || 'Đã có lỗi xảy ra. Vui lòng thử lại.';
+      
+      setError(errorMessage); 
     } finally {
       setLoading(false);
     }
   };
 
+  // Giao diện khi thành công
   if (success) {
     return (
       <div className="flex justify-center items-center h-screen bg-gray-100">
@@ -83,6 +95,7 @@ function ResetPasswordContent() {
     );
   }
 
+  // Giao diện Form nhập liệu
   return (
     <div className="flex justify-center items-center h-screen bg-gray-100 p-4">
       <Card className="w-full max-w-md shadow-lg">
@@ -122,10 +135,22 @@ function ResetPasswordContent() {
               />
             </div>
 
-            {error && <div className="mb-4 p-2 bg-red-50 text-red-600 text-sm rounded border border-red-200">{error}</div>}
+            {/* Hiển thị lỗi (bây giờ error chắc chắn là string nên sẽ không lỗi nữa) */}
+            {error && (
+              <div className="mb-4 p-2 bg-red-50 text-red-600 text-sm rounded border border-red-200">
+                {error}
+              </div>
+            )}
 
             <Button className="w-full" type="submit" disabled={loading}>
-              {loading ? <><FontAwesomeIcon icon={faCircleNotch} className="animate-spin mr-2"/> Đang lưu...</> : 'Xác nhận thay đổi'}
+              {loading ? (
+                <>
+                  <FontAwesomeIcon icon={faCircleNotch} className="animate-spin mr-2"/> 
+                  Đang lưu...
+                </>
+              ) : (
+                'Xác nhận thay đổi'
+              )}
             </Button>
 
             <div className="mt-4 text-center">
@@ -144,7 +169,7 @@ function ResetPasswordContent() {
   );
 }
 
-// 3. Component chính (ResetPasswordPage) bây giờ chỉ bọc Suspense
+// Export component chính (đã bọc Suspense)
 export default function ResetPasswordPage() {
   return (
     <Suspense fallback={<div className="flex justify-center items-center h-screen">Đang tải...</div>}>
