@@ -90,8 +90,26 @@ export const updateStateDocument = async (req, res) => {
 
 // 5. Xóa văn bản (DELETE /:id)
 export const deleteStateDocument = async (req, res) => {
-  // ... Logic tương tự deleteRecruitmentPlan
-  return res.status(501).json({ message: 'Not Implemented' });
+  try {
+    const { id } = req.params;
+
+    // 1. Tìm văn bản xem có tồn tại không
+    const document = await models.Document.findByPk(id);
+
+    if (!document) {
+      return res.status(404).json({ message: 'Văn bản không tồn tại' });
+    }
+
+    // 2. Thực hiện xóa trong Database
+    await document.destroy();
+
+    // 3. Trả về thông báo thành công
+    return res.status(200).json({ message: 'Xóa văn bản thành công!' });
+
+  } catch (error) {
+    console.error('Lỗi xóa văn bản:', error);
+    return res.status(500).json({ message: 'Lỗi máy chủ nội bộ', error: error.message });
+  }
 };
 
 
